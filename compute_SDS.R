@@ -89,11 +89,6 @@ library(stats)
 # Global constants/parameters
 #-----------------------------------------------------------
 
-# to better see how it works on a single test-SNP example set DEBUG_MODE=TRUE
-# this will produce a couple of figures; when a figure is ready the program will halt -- press any key to proceed
-
-DEBUG_MODE		= FALSE
-#DEBUG_MODE		= TRUE
 PRECISION		= 4
 E_GRID_NUM_POINTS  	= 50
 E_GRID_SCALE_FACTOR 	= 20
@@ -103,7 +98,6 @@ OPTIM_NUM_ITERATIONS 	= 5
 # between the test-SNP and the nearby boundary. In such cases we truncate the observations (see below).
 # However, if this happens to more than 5% of the individuals we don't make any prediction and skip over the test-SNP.
 
-#skip_boundary_missing_singletons_fraction_threshold = 0
 skip_boundary_missing_singletons_fraction_threshold = 0.05
 
 
@@ -421,28 +415,6 @@ while(length(lines<-readLines(test_snp_fh, n<-10000))>0) {
 	      n1 = length(dat1)
 	      n2 = length(dat2)
 
-	      if (DEBUG_MODE) {
-
-	      	 # DEBUG_MODE=TRUE would produce two figures
-		 # when a figure is shown the program will halt and wait for an input -- press any key to proceed
-
-	      	 X11()
-
-	       	 myhist = hist(dat012,breaks=50,plot=FALSE)
-	       	 mybreaks=myhist$breaks
-	       	 rhist<-hist(dat0,breaks=mybreaks,freq=FALSE,plot=FALSE)
-		 my_hist_f <- function(x) {if (x<rhist$breaks[1]){return(0)}; if(x>rhist$breaks[length(rhist$breaks)]){return(0)}; ii=1;while(x>rhist$breaks[ii+1]){ii=ii+1}; return(rhist$density[ii])}
-		 my_hist_g <- function(x) {y=x;ii=1; while(ii<=length(x)){y[ii]=my_hist_f(x[ii]);ii=ii+1}; return (y)}
-		 curve(my_hist_g,lwd=4,col=rgb(0,0,1,1),n=1000,from=mybreaks[1]-1e-5,to=mybreaks[length(mybreaks)]+1e-5,xlab="Distance between singletons (bp)", ylab="Density", main=paste("Histogram of singleton distances over test snp\n",paste(test_snp_id,", DAF=",signif(test_snp_af,2),sep="")))
-	       	 rhist<-hist(dat1,breaks=mybreaks,freq=FALSE,plot=FALSE)
-		 curve(my_hist_g,lwd=4,col=rgb(0,1,0,1),n=1000,add=TRUE)
-	       	 rhist<-hist(dat2,breaks=mybreaks,freq=FALSE,plot=FALSE)
-		 curve(my_hist_g,lwd=4,col=rgb(1,0,0,1),n=1000,add=TRUE)
-	       	 legend("topright", c(paste(test_snp_allele1,test_snp_allele1,sep="/"),paste(test_snp_allele1,test_snp_allele2,sep="/"),paste(test_snp_allele2,test_snp_allele2,sep="/")), pch=c(15,15,15), col=c("blue","green","red"), bg="white")
-	       	 invisible(readLines("stdin", n=1))
-
-		 #press any key to proceed
-	      }
 
 	      # gamma shape parameters by the allele frequency (the ancestral/derived annotation is ignored)
 
@@ -452,8 +424,6 @@ while(length(lines<-readLines(test_snp_fh, n<-10000))>0) {
 	      logA2 = log(A2)
 
 	      # a grid of possible initial points around the input guess
-	      # in DEBUG_MODE the entire grid will be exhustively searched, the log-likelihood surface will be presented in a figure,
-	      # (where you'll be able to compare the maximum grid point and the optimization result)
  
 	      logE = seq(from=log(E_grid_center)-log(E_GRID_SCALE_FACTOR),to=log(E_grid_center)+log(E_GRID_SCALE_FACTOR),length=E_GRID_NUM_POINTS)
 
@@ -491,31 +461,6 @@ while(length(lines<-readLines(test_snp_fh, n<-10000))>0) {
    	       	 best_MLE_nlm_iteration = iter
 	      }
 
-	      if (DEBUG_MODE) {
-
-	      	 write("\'nlm\' summary: minimum;estimate;gradient;code;iterations",stderr())
-	       	 write(tmp_nlm_fit$minimum,stderr())
-	       	 write(tmp_nlm_fit$estimate,stderr())
-	       	 write(tmp_nlm_fit$gradient,stderr())
-	       	 write(tmp_nlm_fit$code,stderr())
-	       	 write(tmp_nlm_fit$iterations,stderr())
-	       	 X11()
-	       	 LL = apply(as.matrix(expand.grid(logE,logE)),1,function(x) -f_minus_log_likelihood(x))
-	       	 iMLE =  arrayInd(which.max(LL),c(length(logE),length(logE)))
-	       	 tmp_str1 = paste("NLM logE1 =",tmp_MLE_est[1],", logE2 =",tmp_MLE_est[2],sep=" ")
-	       	 tmp_str2 = paste("GRID logE1 =",logE[iMLE[1]],", logE2 =",logE[iMLE[2]],sep=" ")
-	       	 write(tmp_str1,stderr())
-	       	 write(tmp_str2,stderr())
-	       	 contour(logE, logE, matrix(LL, length(logE), length(logE)), xlab="log(E1)\n[log(E)=log mean tip length in mut. rate units; x=ancestral, y=derived]", ylab="log(E2)", main="Log-likelihood surface around the initial guess")
-
-	       	 matpoints(best_MLE_param_estimate[1], best_MLE_param_estimate[2], type="p", col="red", pch=19, cex=1.5)
-	       	 matpoints(logE[iMLE[1]], logE[iMLE[2]], type="p", col="blue", pch=19, cex=1.5)
-	       	 matpoints(tmp_init_point[1], tmp_init_point[2], type="p", col="black", pch=4, cex=1.5)
-	       	 legend("topleft", c("MLE nlm","MLE grid","Initial guess"), pch=c(19,19,4), col=c("red","blue","black"), bg="white")
-	       	 invisible(readLines("stdin", n=1))
-
-		 #press any key to proceed
-	      }
 
 	      # that's it - write the results for the best (over the different initial guesses) maximum likelihood estimate
 
