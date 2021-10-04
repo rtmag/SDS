@@ -441,3 +441,4 @@ while(length(lines<-readLines(test_snp_fh, n<-10000))>0) {
    }
     }
 }
+
