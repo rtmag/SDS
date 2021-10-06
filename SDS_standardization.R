@@ -21,3 +21,6 @@ for( daf_interval in unique(sort(bin_index)) ){
   SDS$sSDS[bin_index==daf_interval] <- standardize_sds
 }
 
+# "P values are two-sided tail probabilities of standard normal." - Field, et al. 2016 
+# "Two-tailed p-values were converted by whole genome-wide standardized SDS z-scores." - Peikuan Cong, et al. (Westlake)
+
